@@ -1,123 +1,218 @@
-/*
-As principais classes implementadas na STL que não podem ser usadas são:
-Vetor (vector),
-Cadeias de caracteres (string),
-Lista (list),
-Fila (queue),
-Pilha (stack),
-Mapeamento (map),
-Conjunto (set).
-*/
-
 #include <iostream>
 #include <fstream>
-
+#include <sstream>
 using namespace std;
 
-
-// struct criada para o candidato
-struct Candidato {
+struct Candidato
+{
     string nome;
     int numero;
-    Candidato* proximo;
+    int votos;
+    Candidato *proximo;
 };
 
-Candidato* criarCandidato(string nome, int numero) {
-    Candidato* novoCandidato = new Candidato;
+Candidato *criarCandidato(string nome, int numero)
+{
+    Candidato *novoCandidato = new Candidato;
     novoCandidato->nome = nome;
     novoCandidato->numero = numero;
+    novoCandidato->votos = 0;
     novoCandidato->proximo = nullptr;
     return novoCandidato;
 }
 
-void inserirCandidato(Candidato** lista, string nome, int numero) {
-    Candidato* novoCandidato = criarCandidato(nome, numero);
-    if (*lista == nullptr) {
+void inserirCandidato(Candidato **lista, string nome, int numero)
+{
+    Candidato *novoCandidato = criarCandidato(nome, numero);
+    if (*lista == nullptr)
+    {
         *lista = novoCandidato;
-    } else {
-        Candidato* atual = *lista;
-        while (atual->proximo != nullptr) {
+    }
+    else
+    {
+        Candidato *atual = *lista;
+        while (atual->proximo != nullptr)
+        {
             atual = atual->proximo;
         }
         atual->proximo = novoCandidato;
     }
 }
 
-void removerCandidato(Candidato** lista, int numero) {
-    if (*lista == nullptr) {
+void removerCandidato(Candidato **lista, int numero)
+{
+    if (*lista == nullptr)
+    {
         cout << "A lista de candidatos está vazia." << endl;
         return;
     }
 
-    Candidato* atual = *lista;
-    Candidato* anterior = nullptr;
+    Candidato *atual = *lista;
+    Candidato *anterior = nullptr;
 
-    if (atual->numero == numero) {
-        *lista = atual->proximo;
-        delete atual;
-        cout << "Candidato removido com sucesso." << endl;
-        return;
-    }
-
-    while (atual != nullptr && atual->numero != numero) {
+    while (atual != nullptr && atual->numero != numero)
+    {
         anterior = atual;
         atual = atual->proximo;
     }
 
-    if (atual == nullptr) {
+    if (atual == nullptr)
+    {
         cout << "Candidato não encontrado." << endl;
-    } else {
-        anterior->proximo = atual->proximo;
-        delete atual;
-        cout << "Candidato removido com sucesso." << endl;
+        return;
     }
+
+    if (anterior == nullptr)
+    {
+        *lista = atual->proximo;
+    }
+    else
+    {
+        anterior->proximo = atual->proximo;
+    }
+
+    delete atual;
+    cout << "Candidato removido." << endl;
 }
 
-void listarCandidatos(Candidato* lista) {
-    if (lista == nullptr) {
+void listarCandidatos(Candidato *lista)
+{
+    if (lista == nullptr)
+    {
         cout << "A lista de candidatos está vazia." << endl;
         return;
     }
 
     cout << "Lista de candidatos:" << endl;
-    Candidato* atual = lista;
-    while (atual != nullptr) {
-        cout << "Nome: " << atual->nome << ", Número: " << atual->numero << endl;
+    Candidato *atual = lista;
+    while (atual != nullptr)
+    {
+        cout << "Nome: " << atual->nome << ", Número: " << atual->numero << ", Votos: " << atual->votos << endl;
         atual = atual->proximo;
     }
 }
 
-void salvarCandidatos(Candidato* lista) {
+void salvarCandidatos(Candidato *lista)
+{
     ofstream arquivo("candidatos.txt");
-    if (arquivo.is_open()) {
-        Candidato* atual = lista;
-        while (atual != nullptr) {
-            arquivo << atual->nome << " " << atual->numero << endl;
-            atual = atual->proximo;
-        }
-        arquivo.close();
-        cout << "Candidatos salvos no arquivo 'candidatos.txt'." << endl;
-    } else {
-        cout << "Não foi possível abrir o arquivo para salvar os candidatos." << endl;
+
+    if (!arquivo)
+    {
+        cout << "Erro ao abrir o arquivo." << endl;
+        return;
     }
+
+    Candidato *atual = lista;
+    while (atual != nullptr)
+    {
+        arquivo << atual->nome << "," << atual->numero << "," << atual->votos << endl;
+        atual = atual->proximo;
+    }
+
+    arquivo.close();
+    cout << "Candidatos salvos com sucesso." << endl;
 }
 
-void carregarCandidatos(Candidato** lista) {
+Candidato *carregarCandidatos()
+{
     ifstream arquivo("candidatos.txt");
-    if (arquivo.is_open()) {
+
+    if (!arquivo)
+    {
+        cout << "Erro ao abrir o arquivo." << endl;
+        return nullptr;
+    }
+
+    Candidato *lista = nullptr;
+    string linha;
+    while (getline(arquivo, linha))
+    {
         string nome;
         int numero;
-        while (arquivo >> nome >> numero) {
-            inserirCandidato(lista, nome, numero);
+        int votos;
+
+        stringstream ss(linha);
+        getline(ss, nome, ',');
+        ss >> numero;
+		        ss.ignore();
+        ss >> votos;
+
+        inserirCandidato(&lista, nome, numero);
+        Candidato *atual = lista;
+        while (atual != nullptr && atual->numero != numero)
+        {
+            atual = atual->proximo;
         }
-        arquivo.close();
-        cout << "Candidatos carregados do arquivo 'candidatos.txt'." << endl;
-    } else {
-        cout << "Não foi possível abrir o arquivo para carregar os candidatos." << endl;
+        if (atual != nullptr)
+        {
+            atual->votos = votos;
+        }
+    }
+
+    arquivo.close();
+    return lista;
+}
+
+void menu()
+{
+    Candidato *listaCandidatos = carregarCandidatos();
+
+    while (true)
+    {
+        cout << "==== Eleições ====" << endl;
+        cout << "1. Inserir candidato" << endl;
+        cout << "2. Remover candidato" << endl;
+        cout << "3. Listar candidatos" << endl;
+        cout << "4. Salvar candidatos" << endl;
+        cout << "0. Sair" << endl;
+        cout << "==================" << endl;
+        cout << "Escolha uma opção: ";
+
+        int opcao;
+        cin >> opcao;
+
+        switch (opcao)
+        {
+            case 1:
+            {
+                string nome;
+                int numero;
+                cout << "Digite o nome do candidato: ";
+                cin.ignore();
+                getline(cin, nome);
+                cout << "Digite o número do candidato: ";
+                cin >> numero;
+                inserirCandidato(&listaCandidatos, nome, numero);
+                break;
+            }
+            case 2:
+            {
+                int numero;
+                cout << "Digite o número do candidato a ser removido: ";
+                cin >> numero;
+                removerCandidato(&listaCandidatos, numero);
+                break;
+            }
+            case 3:
+                listarCandidatos(listaCandidatos);
+                break;
+            case 4:
+                salvarCandidatos(listaCandidatos);
+                break;
+            case 0:
+                salvarCandidatos(listaCandidatos);
+                cout << "Encerrando o programa..." << endl;
+                return;
+            default:
+                cout << "Opção inválida. Tente novamente." << endl;
+        }
     }
 }
 
-int main() {
-    Candidato* lista;
-
+int main()
+{
+    menu();
+    return 0;
 }
+
+       
