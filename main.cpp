@@ -1,8 +1,21 @@
+/*
+As principais classes implementadas na STL que não podem ser usadas são:
+Vetor (vector),
+Cadeias de caracteres (string),
+Lista (list),
+Fila (queue),
+Pilha (stack),
+Mapeamento (map),
+Conjunto (set).
+*/
+
 #include <iostream>
 #include <fstream>
 
 using namespace std;
 
+
+// struct criada para o candidato
 struct Candidato {
     string nome;
     int numero;
@@ -96,6 +109,15 @@ void carregarCandidatos(Candidato** lista) {
         int numero;
         while (arquivo >> nome >> numero) {
             inserirCandidato(lista, nome, numero);
-		}
-	}
+        }
+        arquivo.close();
+        cout << "Candidatos carregados do arquivo 'candidatos.txt'." << endl;
+    } else {
+        cout << "Não foi possível abrir o arquivo para carregar os candidatos." << endl;
+    }
+}
+
+int main() {
+    Candidato* lista;
+
 }
