@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
-#include <sstream>
 using namespace std;
 
+// Definição das estruturas de dados para Candidato, Eleitor e Voto
 struct Candidato
 {
     string nome;
@@ -11,72 +11,143 @@ struct Candidato
     Candidato *proximo;
 };
 
+struct Eleitor
+{
+    string nome;
+    int titulo;
+    bool apto;
+    Eleitor *proximo;
+};
+
+struct Voto
+{
+    Eleitor *eleitor;
+    Candidato *candidato;
+    Voto *proximo;
+};
+
+// Função para criar um novo Candidato
 Candidato *criarCandidato(string nome, int numero)
 {
+    // Aloca memória para um novo Candidato
     Candidato *novoCandidato = new Candidato;
+
+    // Define os atributos do novo Candidato
     novoCandidato->nome = nome;
     novoCandidato->numero = numero;
     novoCandidato->votos = 0;
     novoCandidato->proximo = nullptr;
+
+    // Retorna o novo Candidato criado
     return novoCandidato;
 }
 
+// Função para criar um novo Eleitor
+Eleitor *criarEleitor(string nome, int titulo, bool apto)
+{
+    // Aloca memória para um novo Eleitor
+    Eleitor *novoEleitor = new Eleitor;
+
+    // Define os atributos do novo Eleitor
+    novoEleitor->nome = nome;
+    novoEleitor->titulo = titulo;
+    novoEleitor->apto = apto;
+    novoEleitor->proximo = nullptr;
+
+    // Retorna o novo Eleitor criado
+    return novoEleitor;
+}
+
+// Função para criar um novo Voto
+Voto *criarVoto(Eleitor *eleitor, Candidato *candidato)
+{
+    // Aloca memória para um novo Voto
+    Voto *novoVoto = new Voto;
+
+    // Define os atributos do novo Voto
+    novoVoto->eleitor = eleitor;
+    novoVoto->candidato = candidato;
+    novoVoto->proximo = nullptr;
+
+    // Retorna o novo Voto criado
+    return novoVoto;
+}
+
+// Função para inserir um Candidato na lista de candidatos
 void inserirCandidato(Candidato **lista, string nome, int numero)
 {
+    // Cria um novo Candidato
     Candidato *novoCandidato = criarCandidato(nome, numero);
+
+    // Verifica se a lista está vazia
     if (*lista == nullptr)
     {
+        // Se estiver vazia, o novo Candidato se torna o primeiro da lista
         *lista = novoCandidato;
     }
     else
     {
+        // Caso contrário, percorre a lista até o último Candidato
         Candidato *atual = *lista;
         while (atual->proximo != nullptr)
         {
             atual = atual->proximo;
         }
+
+        // Insere o novo Candidato no final da lista
         atual->proximo = novoCandidato;
     }
 }
 
+// Função para remover um Candidato da lista de candidatos
 void removerCandidato(Candidato **lista, int numero)
 {
+    // Verifica se a lista está vazia
     if (*lista == nullptr)
     {
         cout << "A lista de candidatos está vazia." << endl;
         return;
     }
 
+    // Variáveis para percorrer a lista
     Candidato *atual = *lista;
-    Candidato *anterior = nullptr;
+	    Candidato *anterior = nullptr;
 
+    // Percorre a lista em busca do Candidato a ser removido
     while (atual != nullptr && atual->numero != numero)
     {
         anterior = atual;
         atual = atual->proximo;
     }
 
+    // Verifica se o Candidato foi encontrado
     if (atual == nullptr)
     {
         cout << "Candidato não encontrado." << endl;
         return;
     }
 
+    // Remove o Candidato da lista
     if (anterior == nullptr)
     {
+        // Caso seja o primeiro da lista
         *lista = atual->proximo;
     }
     else
     {
+        // Caso contrário
         anterior->proximo = atual->proximo;
     }
 
+    // Libera a memória alocada pelo Candidato removido
     delete atual;
     cout << "Candidato removido." << endl;
 }
 
+// Função para listar os Candidatos da lista
 void listarCandidatos(Candidato *lista)
 {
+    // Verifica se a lista está vazia
     if (lista == nullptr)
     {
         cout << "A lista de candidatos está vazia." << endl;
@@ -84,6 +155,8 @@ void listarCandidatos(Candidato *lista)
     }
 
     cout << "Lista de candidatos:" << endl;
+
+    // Percorre a lista de Candidatos e exibe suas informações
     Candidato *atual = lista;
     while (atual != nullptr)
     {
@@ -92,16 +165,20 @@ void listarCandidatos(Candidato *lista)
     }
 }
 
+// Função para salvar os Candidatos em um arquivo
 void salvarCandidatos(Candidato *lista)
 {
+    // Abre o arquivo para escrita
     ofstream arquivo("candidatos.txt");
 
+    // Verifica se o arquivo foi aberto corretamente
     if (!arquivo)
     {
         cout << "Erro ao abrir o arquivo." << endl;
         return;
     }
 
+    // Percorre a lista de Candidatos e escreve suas informações no arquivo
     Candidato *atual = lista;
     while (atual != nullptr)
     {
@@ -109,14 +186,18 @@ void salvarCandidatos(Candidato *lista)
         atual = atual->proximo;
     }
 
+    // Fecha o arquivo
     arquivo.close();
     cout << "Candidatos salvos com sucesso." << endl;
 }
 
+// Função para carregar os Candidatos a partir de um arquivo
 Candidato *carregarCandidatos()
 {
+    // Abre o arquivo para leitura
     ifstream arquivo("candidatos.txt");
 
+    // Verifica se o arquivo foi aberto corretamente
     if (!arquivo)
     {
         cout << "Erro ao abrir o arquivo." << endl;
@@ -125,36 +206,57 @@ Candidato *carregarCandidatos()
 
     Candidato *lista = nullptr;
     string linha;
+
+    // Lê cada linha do arquivo
     while (getline(arquivo, linha))
     {
         string nome;
         int numero;
         int votos;
 
+        // Cria um stringstream para extrair os dados da linha
         stringstream ss(linha);
+
+        // Extrai o nome do candidato até a primeira vírgula
         getline(ss, nome, ',');
+
+        // Extrai o número do candidato
         ss >> numero;
-		        ss.ignore();
+
+        // Ignora a vírgula após o número
+        ss.ignore();
+
+        // Extrai a quantidade de votos do candidato
         ss >> votos;
 
-        inserirCandidato(&lista, nome, numero);
+        // Insere o Candidato
+		        inserirCandidato(&lista, nome, numero);
+
+        // Encontra o Candidato na lista pelo número
         Candidato *atual = lista;
         while (atual != nullptr && atual->numero != numero)
         {
             atual = atual->proximo;
         }
+
+        // Atualiza a quantidade de votos do Candidato
         if (atual != nullptr)
         {
             atual->votos = votos;
         }
     }
 
+    // Fecha o arquivo
     arquivo.close();
+
+    // Retorna a lista de Candidatos carregada do arquivo
     return lista;
 }
 
+// Função para exibir o menu e interagir com o usuário
 void menu()
 {
+    // Carrega a lista de Candidatos do arquivo
     Candidato *listaCandidatos = carregarCandidatos();
 
     while (true)
@@ -214,5 +316,3 @@ int main()
     menu();
     return 0;
 }
-
-       
