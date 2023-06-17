@@ -1,87 +1,101 @@
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
- typedef int ELEMENTO;
+struct Candidato {
+    string nome;
+    int numero;
+    Candidato* proximo;
+};
 
- typedef struct NO{
- 	ELEMENTO valor;
- 	struct NO* prox;
- }*FILA;
+Candidato* criarCandidato(string nome, int numero) {
+    Candidato* novoCandidato = new Candidato;
+    novoCandidato->nome = nome;
+    novoCandidato->numero = numero;
+    novoCandidato->proximo = nullptr;
+    return novoCandidato;
+}
 
- FILA novoElemento(ELEMENTO elem){
- 	FILA aux = new NO;
- 	aux->valor = elem;
- 	aux->prox  = NULL;
- 	return aux;
- }
+void inserirCandidato(Candidato** lista, string nome, int numero) {
+    Candidato* novoCandidato = criarCandidato(nome, numero);
+    if (*lista == nullptr) {
+        *lista = novoCandidato;
+    } else {
+        Candidato* atual = *lista;
+        while (atual->proximo != nullptr) {
+            atual = atual->proximo;
+        }
+        atual->proximo = novoCandidato;
+    }
+}
 
- FILA enqueue(ELEMENTO elem, FILA no){
-     if(no == NULL) {
-         return novoElemento(elem);
-     }
- 	FILA aux = novoElemento(elem);
- 	aux->prox = no;
- 	return aux;
- }
+void removerCandidato(Candidato** lista, int numero) {
+    if (*lista == nullptr) {
+        cout << "A lista de candidatos está vazia." << endl;
+        return;
+    }
 
- void mostraFila(FILA no){
- 	while(no != NULL){
- 		cout <<"[" << no->valor << "] -> ";
- 		no = no->prox;
- 	}
- 	cout << endl;
- }
+    Candidato* atual = *lista;
+    Candidato* anterior = nullptr;
 
- ELEMENTO dequeue(FILA no){
-    ELEMENTO temp;
- 	FILA noAnterior = no;
- 	while(no->prox != NULL){
- 		noAnterior = no;
- 		no = no->prox;
- 	}
- 	noAnterior->prox = NULL;
-    temp = no->valor;
- 	delete no;
-    return temp;
- }
+    if (atual->numero == numero) {
+        *lista = atual->proximo;
+        delete atual;
+        cout << "Candidato removido com sucesso." << endl;
+        return;
+    }
 
- int tamanhoFila(FILA no){
-     FILA fila_local = no;
- 	int cont = 0;
- 	while(fila_local != NULL){
- 		cont++;
- 		fila_local = fila_local->prox;
- 	}
- 	return cont;
- }
+    while (atual != nullptr && atual->numero != numero) {
+        anterior = atual;
+        atual = atual->proximo;
+    }
 
- void destruir(FILA no){
-    cout << endl<< endl;
-    FILA noProximo = no;
-    while(noProximo->prox != NULL){
- 		cout << "| " << noProximo->valor << endl;
-        no = noProximo;
-        noProximo = no->prox;
-        no->prox = NULL;
-        free(no);
- 	}
-    no = noProximo;
-    cout << "| " << no->valor << endl;
-    no->prox = NULL;
-    free(no);
+    if (atual == nullptr) {
+        cout << "Candidato não encontrado." << endl;
+    } else {
+        anterior->proximo = atual->proximo;
+        delete atual;
+        cout << "Candidato removido com sucesso." << endl;
+    }
+}
 
- }
+void listarCandidatos(Candidato* lista) {
+    if (lista == nullptr) {
+        cout << "A lista de candidatos está vazia." << endl;
+        return;
+    }
 
- int buscaFila(ELEMENTO ch, FILA no){
-     int cont = tamanhoFila(no);
-     while(no != NULL){
-         if (ch == no->valor) {
-             return cont;
-         }
-         cont--;
-         no = no->prox;
-     }
-     return cont;
-	 return 0;
- }
+    cout << "Lista de candidatos:" << endl;
+    Candidato* atual = lista;
+    while (atual != nullptr) {
+        cout << "Nome: " << atual->nome << ", Número: " << atual->numero << endl;
+        atual = atual->proximo;
+    }
+}
+
+void salvarCandidatos(Candidato* lista) {
+    ofstream arquivo("candidatos.txt");
+    if (arquivo.is_open()) {
+        Candidato* atual = lista;
+        while (atual != nullptr) {
+            arquivo << atual->nome << " " << atual->numero << endl;
+            atual = atual->proximo;
+        }
+        arquivo.close();
+        cout << "Candidatos salvos no arquivo 'candidatos.txt'." << endl;
+    } else {
+        cout << "Não foi possível abrir o arquivo para salvar os candidatos." << endl;
+    }
+}
+
+void carregarCandidatos(Candidato** lista) {
+    ifstream arquivo("candidatos.txt");
+    if (arquivo.is_open()) {
+        string nome;
+        int numero;
+        while (arquivo >> nome >> numero) {
+            inserirCandidato(lista, nome, numero);
+		}
+	}
+}
